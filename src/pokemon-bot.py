@@ -6,6 +6,7 @@ import argparse
 import config
 
 from telegram import Updater
+from functools import partial
 
 def resolve_args():
     parser = argparse.ArgumentParser()
@@ -30,11 +31,18 @@ def main():
 
     dispatcher.addTelegramCommandHandler('start', handler.help)
     dispatcher.addTelegramCommandHandler('help', handler.help)
+
     dispatcher.addTelegramCommandHandler('pokemon', gm.new)
+    dispatcher.addTelegramCommandHandler('pokemon1', lambda bot, update: gm.new(bot, update, 1))
+    dispatcher.addTelegramCommandHandler('pokemon2', lambda bot, update: gm.new(bot, update, 2))
+    dispatcher.addTelegramCommandHandler('pokemon3', lambda bot, update: gm.new(bot, update, 3))
+    dispatcher.addTelegramCommandHandler('pokemon4', lambda bot, update: gm.new(bot, update, 4))
+    dispatcher.addTelegramCommandHandler('pokemon5', lambda bot, update: gm.new(bot, update, 5))
+    dispatcher.addTelegramCommandHandler('pokemon6', lambda bot, update: gm.new(bot, update, 6))
 
     dispatcher.addTelegramMessageHandler(gm.default)
 
-    # dispatcher.addUnknownTelegramCommandHandler(handler.default)
+    job_queue.put(gm.job, 3)
 
     updater.start_polling()
 

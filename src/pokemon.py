@@ -5,12 +5,13 @@ from random import randint
 from os.path import abspath, dirname, isfile
 from PIL import Image
 
-THIS_DIR = dirname(abspath(__file__))
+ARTWORKS_DIR = abspath(dirname(abspath(__file__)) + '/' + config.ARTWORKS_DIR)
+
+print('Artworks dir: ' + ARTWORKS_DIR)
 
 POKEAPI_URL = 'http://pokeapi.co/api/v2/pokemon/{}/'
 
 GENERATIONS = [151, 251, 386, 493, 649, 721]
-MAX_POKEMONS = GENERATIONS[-1]
 
 def fetch_name(number):
     response = requests.get(POKEAPI_URL.format(number))
@@ -38,8 +39,8 @@ class Pokemon:
     def __init__(self, number):
         self.number = number
         self.name = fetch_name(number)
-        self.artwork = abspath(THIS_DIR + '/{}/{}.png'.format(config.ARTWORKS_DIR, self.number))
-        self.shadow = abspath(THIS_DIR + '/{}/{}-shadow.png'.format(config.ARTWORKS_DIR, self.number))
+        self.artwork = ARTWORKS_DIR + '/{}.png'.format(number)
+        self.shadow = ARTWORKS_DIR + '/{}-shadow.png'.format(number)
 
         if not isfile(self.shadow):
             make_shadow(self.artwork, self.shadow)
@@ -49,13 +50,10 @@ class Pokemon:
             self.number, self.name, hex(id(self)))
 
     @classmethod
-    def random(cls, gen=None):
-        if gen:
-            return Pokemon(randint(1, generations[gen-1]))
-
-        return Pokemon(randint(1, MAX_POKEMONS))
+    def random(cls, gen=0):
+        return Pokemon(randint(1, GENERATIONS[gen-1]))
 
 if __name__ == '__main__':
     p = Pokemon(GENERATIONS[1])
+    p = Pokemon(25)
     print(p.name.title(), p.artwork)
-

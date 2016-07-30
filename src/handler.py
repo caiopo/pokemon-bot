@@ -2,9 +2,9 @@ import config
 import responses
 import logging
 
-from pokemon import Pokemon
+from collections import namedtuple
 from threading import Lock
-
+from pokemon import Pokemon
 
 def report_errors(func):
     def catcher(bot, update):
@@ -34,10 +34,10 @@ def error(bot, update, e):
     bot.sendMessage(chat_id=config.MAINTAINER_ID,
                     text=text)
 
-# @report_errors
-# def start(bot, update):
-#     bot.sendMessage(chat_id=update.message.chat_id,
-#                     text=responses.start)
+@report_errors
+def start(bot, update):
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text=responses.start)
 
 @report_errors
 def help(bot, update):
@@ -51,19 +51,30 @@ def unknown(bot, update):
         bot.sendMessage(chat_id=update.message.chat_id,
                         text=responses.unknown_command)
 
+TIME_TO_SOLVE = 5 # time 3 == 15 seconds
+
+class PokemonEntry:
+    def __init__(self, pokemon, time_left=TIME_TO_SOLVE):
+        self.pokemon = pokemon
+        self.time_left = time_left
+
+    def __repr__(self):
+        return '<PokemonEntry (pokemon={}, time_left={}) at {}>'.format(
+                    self.pokemon, self.time_left, id(self))
+
 class GameManager:
     def __init__(self):
         self.games = {}
         self.mutex = Lock()
 
-    def new(self, bot, update, gen=None):
+    def new(self, bot, update, gen=6):
         try:
             p = Pokemon.random(gen)
 
             print(p)
 
             with self.mutex:
-                self.games[update.message.chat_id] = p
+                self.games[update.message.chat_id] = PokemonEntry(p, TIME_TO_SOLVE)
 
             with open(p.shadow, 'rb') as photo:
                 bot.sendPhoto(chat_id=update.message.chat_id,
@@ -77,22 +88,18 @@ class GameManager:
         try:
             word = update.message.text.lower()
 
-            p = None
+            entry = self.games.get(update.message.chat_id)
 
-            with self.mutex:
-                for k in self.games.keys():
-                    if word == self.games[k].name:
-                        p = self.games[k]
-                        del self.games[k]
-                        break
+            if entry and word == entry.pokemon.name:
+                with self.mutex:
+                    del self.games[update.message.chat_id]
 
-            if p:
                 if update.message.chat_id > 0: # user
-                    resp = responses.reveal(p)
+                    resp = responses.reveal(entry.pokemon)
                 else:
-                    resp = responses.revealgroup(p, update.message.from_user.first_name)
+                    resp = responses.revealgroup(entry.pokemon, update.message.from_user.first_name)
 
-                with open(p.artwork, 'rb') as photo:
+                with open(entry.pokemon.artwork, 'rb') as photo:
                     bot.sendPhoto(chat_id=update.message.chat_id,
                                   photo=photo,
                                   caption=resp)
@@ -101,7 +108,25 @@ class GameManager:
             error(bot, update, e)
 
     def job(self, bot):
-        pass
+        try:
+            times_up = []
 
-if __name__ == '__main__':
-    pass
+            with self.mutex:
+                for k in self.games.keys():
+                    self.games[k].time_left -= 1
+
+                    if self.games[k].time_left == 0:
+                        times_up.append((k, self.games[k]))
+
+                for k, _ in times_up:
+                    del self.games[k]
+
+            for chat_id, entry in times_up:
+                with open(entry.pokemon.artwork, 'rb') as photo:
+                    bot.sendPhoto(chat_id=chat_id,
+                                  photo=photo,
+                                  caption=responses.times_up(entry.pokemon))
+
+        except Exception as e:
+            error(bot, None, e)
+
