@@ -13,14 +13,6 @@ POKEAPI_URL = 'http://pokeapi.co/api/v2/pokedex/1/'
 
 GENERATIONS = [151, 251, 386, 493, 649, 721]
 
-def fetch_name(number):
-    response = requests.get(POKEAPI_URL.format(number))
-
-    if not response.ok:
-        raise Exception('couldn\'t fetch name from pokeapi. number={}'.format(number))
-
-    return response.json()['name'].lower()
-
 class PokemonNames:
     names = []
 
@@ -34,12 +26,14 @@ class PokemonNames:
             pokelist = response.json()['pokemon_entries']
 
             for d in pokelist:
-                cls.names.append(d['pokemon_species']['name'])
+                cls.names.append(d['pokemon_species']['name'].lower())
 
         return cls.names[number-1]
 
 def make_shadow(infile, outfile):
-    with Image.open(infile) as open_img:
+    open_img = Image.open(infile)
+
+    try:
         img = open_img.convert('RGBA')
 
         data = img.load()
@@ -52,6 +46,9 @@ def make_shadow(infile, outfile):
                     data[x, y] = (0, 0, 0, 255)
 
         img.save(outfile)
+
+    finally:
+        open_img.close()
 
 class Pokemon:
     def __init__(self, number):

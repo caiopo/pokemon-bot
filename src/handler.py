@@ -69,6 +69,11 @@ class GameManager:
 
     def new(self, bot, update, gen=6):
         try:
+            if update.message.chat_id in self.games:
+                bot.sendMessage(chat_id=update.message.chat_id,
+                                text=responses.already_active)
+                return
+
             p = Pokemon.random(gen)
 
             print(p)
