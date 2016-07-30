@@ -31,24 +31,19 @@ class PokemonNames:
         return cls.names[number-1]
 
 def make_shadow(infile, outfile):
-    open_img = Image.open(infile)
+    img = Image.open(infile).convert('RGBA')
 
-    try:
-        img = open_img.convert('RGBA')
+    data = img.load()
 
-        data = img.load()
+    for y in range(img.size[1]):
+        for x in range(img.size[0]):
+            if data[x, y][3] < 200:
+                data[x, y] = (255, 255, 255, 255)
+            else:
+                data[x, y] = (0, 0, 0, 255)
 
-        for y in range(img.size[1]):
-            for x in range(img.size[0]):
-                if data[x, y][3] < 200:
-                    data[x, y] = (255, 255, 255, 255)
-                else:
-                    data[x, y] = (0, 0, 0, 255)
+    img.save(outfile, 'PNG')
 
-        img.save(outfile, 'PNG')
-
-    finally:
-        open_img.close()
 
 class Pokemon:
     def __init__(self, number):
