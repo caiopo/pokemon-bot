@@ -1,14 +1,18 @@
 help = '''Bot para jogar "Quem é esse Pokémon?"
 
-/pokemon - Enviarei a foto de um Pokémon e você terá 15 segundos para descobrir seu nome.
+/pokemon - Enviarei a foto de um Pokémon de qualquer geração e você terá 15 segundos para descobrir seu nome.
 
 Você pode colocar o número de uma geração ao lado do comando (ex. /pokemon1) para que eu envie apenas Pokémons até esta geração.
+
+Você também pode abreviar "pokemon" para apenas "p" no comando.
 
 Meu repositório: https://github.com/caiopo/pokemon-bot
 
 Feito por @caiopo'''
 
 new = 'Quem é esse Pokémon?'
+
+already_active = 'Já existe um jogo ativo no chat atual!'
 
 reveal = lambda p: 'Correto! É o {}!'.format(p.name.title())
 

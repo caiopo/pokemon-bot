@@ -40,6 +40,14 @@ def main():
     dispatcher.addTelegramCommandHandler('pokemon5', lambda bot, update: gm.new(bot, update, 5))
     dispatcher.addTelegramCommandHandler('pokemon6', lambda bot, update: gm.new(bot, update, 6))
 
+    dispatcher.addTelegramCommandHandler('p', gm.new)
+    dispatcher.addTelegramCommandHandler('p1', lambda bot, update: gm.new(bot, update, 1))
+    dispatcher.addTelegramCommandHandler('p2', lambda bot, update: gm.new(bot, update, 2))
+    dispatcher.addTelegramCommandHandler('p3', lambda bot, update: gm.new(bot, update, 3))
+    dispatcher.addTelegramCommandHandler('p4', lambda bot, update: gm.new(bot, update, 4))
+    dispatcher.addTelegramCommandHandler('p5', lambda bot, update: gm.new(bot, update, 5))
+    dispatcher.addTelegramCommandHandler('p6', lambda bot, update: gm.new(bot, update, 6))
+
     dispatcher.addTelegramMessageHandler(gm.default)
 
     job_queue.put(gm.job, 3)
