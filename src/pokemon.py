@@ -45,7 +45,7 @@ def make_shadow(infile, outfile):
                 else:
                     data[x, y] = (0, 0, 0, 255)
 
-        img.save(outfile)
+        img.save(outfile, 'PNG')
 
     finally:
         open_img.close()
@@ -70,5 +70,4 @@ class Pokemon:
 
 if __name__ == '__main__':
     p = Pokemon(GENERATIONS[1])
-    # p = Pokemon(25)
     print(p.name.title(), p.artwork)

@@ -29,6 +29,9 @@ def error(bot, update, e):
     if str(e):
         text += '\nError: {}'.format(e)
 
+    if isinstance(e, OSError):
+        text += '\nErrno: {}\nStrerror: {}'.format(e.errno, e.strerror)
+
     logging.getLogger().error(text)
 
     bot.sendMessage(chat_id=config.MAINTAINER_ID,
@@ -51,7 +54,7 @@ def unknown(bot, update):
         bot.sendMessage(chat_id=update.message.chat_id,
                         text=responses.unknown_command)
 
-TIME_TO_SOLVE = 5 # time 3 == 15 seconds
+TIME_TO_SOLVE = 5 # times 3 == 15 seconds
 
 class PokemonEntry:
     def __init__(self, pokemon, time_left=TIME_TO_SOLVE):
