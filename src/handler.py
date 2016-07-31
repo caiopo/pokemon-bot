@@ -168,12 +168,13 @@ class GameManager:
                     return
 
                 for p in sorted(self.score_dict[update.message.chat_id].items(),
-                                key=lambda x: x[1].score):
+                                key=lambda x: x[1].score,
+                                reverse=True):
 
                     text += '\n{}: {}'.format(p[1].name, p[1].score)
 
-                    bot.sendMessage(chat_id=update.message.chat_id,
-                                    text=text)
+                bot.sendMessage(chat_id=update.message.chat_id,
+                                text=text)
         except Exception as e:
             error(bot, update, e)
 
