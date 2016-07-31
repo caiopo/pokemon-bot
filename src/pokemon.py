@@ -19,16 +19,20 @@ class PokemonNames:
     @classmethod
     def get(cls, number):
         if not cls.names:
-            response = requests.get(POKEAPI_URL)
-            if not response.ok:
-                raise Exception('couldn\'t fetch name from pokeapi. number={}'.format(number))
-
-            pokelist = response.json()['pokemon_entries']
-
-            for d in pokelist:
-                cls.names.append(d['pokemon_species']['name'].lower())
+            cls.load()
 
         return cls.names[number-1]
+
+    @classmethod
+    def load(cls):
+        response = requests.get(POKEAPI_URL)
+        if not response.ok:
+            raise Exception('couldn\'t fetch name from pokeapi. number={}'.format(number))
+
+        pokelist = response.json()['pokemon_entries']
+
+        for d in pokelist:
+            cls.names.append(d['pokemon_species']['name'].lower())
 
 def make_shadow(infile, outfile):
     img = Image.open(infile).convert('RGBA')
@@ -62,6 +66,8 @@ class Pokemon:
     @classmethod
     def random(cls, gen=0):
         return Pokemon(randint(1, GENERATIONS[gen-1]))
+
+PokemonNames.load()
 
 if __name__ == '__main__':
     p = Pokemon(GENERATIONS[1])

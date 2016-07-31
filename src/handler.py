@@ -1,27 +1,30 @@
 import config
 import responses
 import logging
+import operator
 
 from collections import namedtuple
 from threading import Lock
 from pokemon import Pokemon
 
 # Botfather /setcommands
-# pokemon - Inicia uma rodada de "Quem é esse Pokémon"
-# pokemon1 - Inicia uma rodada de "Quem é esse Pokémon" (geração 1)
-# pokemon2 - Inicia uma rodada de "Quem é esse Pokémon" (geração 2)
-# pokemon3 - Inicia uma rodada de "Quem é esse Pokémon" (geração 3)
-# pokemon4 - Inicia uma rodada de "Quem é esse Pokémon" (geração 4)
-# pokemon5 - Inicia uma rodada de "Quem é esse Pokémon" (geração 5)
-# pokemon6 - Inicia uma rodada de "Quem é esse Pokémon" (geração 6)
-# p - Inicia uma rodada de "Quem é esse Pokémon"
-# p1 - Inicia uma rodada de "Quem é esse Pokémon" (geração 1)
-# p2 - Inicia uma rodada de "Quem é esse Pokémon" (geração 2)
-# p3 - Inicia uma rodada de "Quem é esse Pokémon" (geração 3)
-# p4 - Inicia uma rodada de "Quem é esse Pokémon" (geração 4)
-# p5 - Inicia uma rodada de "Quem é esse Pokémon" (geração 5)
-# p6 - Inicia uma rodada de "Quem é esse Pokémon" (geração 6)
-# help - Informações sobre o bot
+# pokemon - inicia uma rodada de "Quem é esse Pokémon"
+# pokemon1 - inicia uma rodada de "Quem é esse Pokémon" (geração 1)
+# pokemon2 - inicia uma rodada de "Quem é esse Pokémon" (geração 2)
+# pokemon3 - inicia uma rodada de "Quem é esse Pokémon" (geração 3)
+# pokemon4 - inicia uma rodada de "Quem é esse Pokémon" (geração 4)
+# pokemon5 - inicia uma rodada de "Quem é esse Pokémon" (geração 5)
+# pokemon6 - inicia uma rodada de "Quem é esse Pokémon" (geração 6)
+# p - inicia uma rodada de "Quem é esse Pokémon"
+# p1 - inicia uma rodada de "Quem é esse Pokémon" (geração 1)
+# p2 - inicia uma rodada de "Quem é esse Pokémon" (geração 2)
+# p3 - inicia uma rodada de "Quem é esse Pokémon" (geração 3)
+# p4 - inicia uma rodada de "Quem é esse Pokémon" (geração 4)
+# p5 - inicia uma rodada de "Quem é esse Pokémon" (geração 5)
+# p6 - inicia uma rodada de "Quem é esse Pokémon" (geração 6)
+# score - mostra a pontuação
+# clear - limpa a pontuação
+# help - informações sobre o bot
 
 def report_errors(func):
     def catcher(bot, update):
@@ -82,10 +85,22 @@ class PokemonEntry:
         return '<PokemonEntry (pokemon={}, time_left={}) at {}>'.format(
                     self.pokemon, self.time_left, id(self))
 
+class ScoreEntry:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def __repr__(self):
+        return '<ScoreEntry (name={}, score={}) at {}>'.format(
+                    self.name, self.score, id(self))
+
 class GameManager:
     def __init__(self):
         self.games = {}
         self.mutex = Lock()
+
+        self.score_dict = {}
+        self.mutex_score = Lock()
 
     def new(self, bot, update, gen=6):
         try:
@@ -127,6 +142,51 @@ class GameManager:
                                   photo=photo,
                                   caption=resp)
 
+                with self.mutex_score:
+                    group_dict = self.score_dict.get(update.message.chat_id, {})
+
+                    score_entry = group_dict.get(update.message.from_user.id,
+                                                 ScoreEntry(update.message.from_user.first_name, 0))
+
+                    score_entry.score += 1
+
+                    group_dict[update.message.from_user.id] = score_entry
+
+                    self.score_dict[update.message.chat_id] = group_dict
+
+        except Exception as e:
+            error(bot, update, e)
+
+    def score(self, bot, update):
+        try:
+            text = responses.score
+
+            with self.mutex_score:
+                if update.message.chat_id not in self.score_dict:
+                    bot.sendMessage(chat_id=update.message.chat_id,
+                                    text=responses.score_not_found)
+                    return
+
+                for p in sorted(self.score_dict[update.message.chat_id].items(),
+                                key=lambda x: x[1].score):
+
+                    text += '\n{}: {}'.format(p[1].name, p[1].score)
+
+                    bot.sendMessage(chat_id=update.message.chat_id,
+                                    text=text)
+        except Exception as e:
+            error(bot, update, e)
+
+    def clear(self, bot, update):
+        try:
+            with self.mutex_score:
+                if update.message.chat_id in self.score_dict:
+                    del self.score_dict[update.message.chat_id]
+                    bot.sendMessage(chat_id=update.message.chat_id,
+                                    text=responses.clear)
+                else:
+                    bot.sendMessage(chat_id=update.message.chat_id,
+                                    text=responses.score_not_found)
         except Exception as e:
             error(bot, update, e)
 

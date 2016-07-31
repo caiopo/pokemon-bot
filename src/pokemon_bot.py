@@ -48,6 +48,9 @@ def main():
     dispatcher.addTelegramCommandHandler('p5', lambda bot, update: gm.new(bot, update, 5))
     dispatcher.addTelegramCommandHandler('p6', lambda bot, update: gm.new(bot, update, 6))
 
+    dispatcher.addTelegramCommandHandler('score', gm.score)
+    dispatcher.addTelegramCommandHandler('clear', gm.clear)
+
     dispatcher.addTelegramMessageHandler(gm.default)
 
     job_queue.put(gm.job, 3)
