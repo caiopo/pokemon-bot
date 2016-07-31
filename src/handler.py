@@ -6,6 +6,23 @@ from collections import namedtuple
 from threading import Lock
 from pokemon import Pokemon
 
+# Botfather /setcommands
+# pokemon - Inicia uma rodada de "Quem é esse Pokémon"
+# pokemon1 - Inicia uma rodada de "Quem é esse Pokémon" (geração 1)
+# pokemon2 - Inicia uma rodada de "Quem é esse Pokémon" (geração 2)
+# pokemon3 - Inicia uma rodada de "Quem é esse Pokémon" (geração 3)
+# pokemon4 - Inicia uma rodada de "Quem é esse Pokémon" (geração 4)
+# pokemon5 - Inicia uma rodada de "Quem é esse Pokémon" (geração 5)
+# pokemon6 - Inicia uma rodada de "Quem é esse Pokémon" (geração 6)
+# p - Inicia uma rodada de "Quem é esse Pokémon"
+# p1 - Inicia uma rodada de "Quem é esse Pokémon" (geração 1)
+# p2 - Inicia uma rodada de "Quem é esse Pokémon" (geração 2)
+# p3 - Inicia uma rodada de "Quem é esse Pokémon" (geração 3)
+# p4 - Inicia uma rodada de "Quem é esse Pokémon" (geração 4)
+# p5 - Inicia uma rodada de "Quem é esse Pokémon" (geração 5)
+# p6 - Inicia uma rodada de "Quem é esse Pokémon" (geração 6)
+# help - Informações sobre o bot
+
 def report_errors(func):
     def catcher(bot, update):
         try:
@@ -78,8 +95,6 @@ class GameManager:
                 return
 
             p = Pokemon.random(gen)
-
-            print(p)
 
             with self.mutex:
                 self.games[update.message.chat_id] = PokemonEntry(p, TIME_TO_SOLVE)
