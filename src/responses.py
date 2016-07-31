@@ -20,6 +20,8 @@ score_not_found = 'Pontuação inexistente'
 
 clear = 'Pontuações zeradas'
 
+stop = 'Jogo cancelado'
+
 reveal = lambda p: 'Correto! É o {}!'.format(p.name.title())
 
 revealgroup = lambda p, u: 'É o {}, {} acertou!'.format(p.name.title(), u)

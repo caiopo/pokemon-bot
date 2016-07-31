@@ -7,6 +7,7 @@ from collections import namedtuple
 from threading import Lock
 from pokemon import Pokemon
 
+
 # Botfather /setcommands
 # pokemon - inicia uma rodada de "Quem é esse Pokémon"
 # pokemon1 - inicia uma rodada de "Quem é esse Pokémon" (geração 1)
@@ -102,20 +103,29 @@ class GameManager:
         self.score_dict = {}
         self.mutex_score = Lock()
 
-    def new(self, bot, update, gen=6):
+        self.last_gen = {}
+
+    def new(self, bot, update, gen=None, chat_id=None):
         try:
-            if update.message.chat_id in self.games:
-                bot.sendMessage(chat_id=update.message.chat_id,
+            chat_id = chat_id or update.message.chat_id
+
+            if chat_id in self.games:
+                bot.sendMessage(chat_id=chat_id,
                                 text=responses.already_active)
                 return
 
+            if gen is None:
+                gen = self.last_gen.get(chat_id, 0)
+
             p = Pokemon.random(gen)
 
+            self.last_gen[chat_id] = gen
+
             with self.mutex:
-                self.games[update.message.chat_id] = PokemonEntry(p, TIME_TO_SOLVE)
+                self.games[chat_id] = PokemonEntry(p, TIME_TO_SOLVE)
 
             with open(p.shadow, 'rb') as photo:
-                bot.sendPhoto(chat_id=update.message.chat_id,
+                bot.sendPhoto(chat_id=chat_id,
                               photo=photo,
                               caption=responses.new)
 
@@ -124,11 +134,11 @@ class GameManager:
 
     def default(self, bot, update):
         try:
-            word = update.message.text.lower()
+            phrase = update.message.text.lower()
 
             entry = self.games.get(update.message.chat_id)
 
-            if entry and word == entry.pokemon.name:
+            if entry and entry.pokemon.name in phrase:
                 with self.mutex:
                     del self.games[update.message.chat_id]
 
@@ -153,6 +163,8 @@ class GameManager:
                     group_dict[update.message.from_user.id] = score_entry
 
                     self.score_dict[update.message.chat_id] = group_dict
+
+                self.new(bot, update)
 
         except Exception as e:
             error(bot, update, e)
@@ -183,11 +195,25 @@ class GameManager:
             with self.mutex_score:
                 if update.message.chat_id in self.score_dict:
                     del self.score_dict[update.message.chat_id]
-                    bot.sendMessage(chat_id=update.message.chat_id,
-                                    text=responses.clear)
+                    resp = responses.clear
                 else:
-                    bot.sendMessage(chat_id=update.message.chat_id,
-                                    text=responses.score_not_found)
+                    resp = responses.score_not_found
+
+            bot.sendMessage(chat_id=update.message.chat_id,
+                            text=resp)
+
+        except Exception as e:
+            error(bot, update, e)
+
+    def stop(self, bot, update):
+        try:
+            with self.mutex:
+                if update.message.chat_id in self.games:
+                    del self.games[update.message.chat_id]
+
+            bot.sendMessage(chat_id=update.message.chat_id,
+                            text=responses.stop)
+
         except Exception as e:
             error(bot, update, e)
 
@@ -210,6 +236,8 @@ class GameManager:
                     bot.sendPhoto(chat_id=chat_id,
                                   photo=photo,
                                   caption=responses.times_up(entry.pokemon))
+
+                self.new(bot, None, chat_id=chat_id)
 
         except Exception as e:
             error(bot, None, e)

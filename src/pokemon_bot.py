@@ -50,6 +50,7 @@ def main():
 
     dispatcher.addTelegramCommandHandler('score', gm.score)
     dispatcher.addTelegramCommandHandler('clear', gm.clear)
+    dispatcher.addTelegramCommandHandler('stop', gm.stop)
 
     dispatcher.addTelegramMessageHandler(gm.default)
 
